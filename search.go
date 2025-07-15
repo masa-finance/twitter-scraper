@@ -2,7 +2,6 @@ package twitterscraper
 
 import (
 	"context"
-	"errors"
 	"net/url"
 	"strconv"
 )
@@ -99,9 +98,9 @@ func (s *Scraper) SearchProfiles(ctx context.Context, query string, maxProfilesN
 
 // getSearchTimeline gets results for a given search query, via the Twitter frontend API
 func (s *Scraper) getSearchTimeline(query string, maxNbr int, cursor string) (*searchTimeline, error) {
-	if !s.isLogged {
-		return nil, errors.New("scraper is not logged in for search")
-	}
+	// if !s.isLogged {
+	// 	return nil, errors.New("scraper is not logged in for search")
+	// }
 
 	if maxNbr > 50 {
 		maxNbr = 50
