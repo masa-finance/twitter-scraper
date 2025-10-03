@@ -24,4 +24,3 @@ func TestGetReplies(t *testing.T) {
 		t.Fatal("No cursors returned")
 	}
 }
-

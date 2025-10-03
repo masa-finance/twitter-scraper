@@ -19,13 +19,8 @@ type Scraper struct {
 	bearerToken    string
 	client         *http.Client
 	delay          int64
-	guestToken     string
-	guestCreatedAt time.Time
 	includeReplies bool
 	isLogged       bool
-	isOpenAccount  bool
-	oAuthToken     string
-	oAuthSecret    string
 	proxy          string
 	userAgent      string
 	searchMode     SearchMode
@@ -67,12 +62,6 @@ func New() *Scraper {
 
 func (s *Scraper) setBearerToken(token string) {
 	s.bearerToken = token
-	s.guestToken = ""
-}
-
-// IsGuestToken check if guest token not empty
-func (s *Scraper) IsGuestToken() bool {
-	return s.guestToken != ""
 }
 
 // SetSearchMode switcher

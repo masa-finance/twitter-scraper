@@ -17,9 +17,6 @@ var (
 	authToken     = os.Getenv("AUTH_TOKEN")
 	csrfToken     = os.Getenv("CSRF_TOKEN")
 	cookies       = os.Getenv("COOKIES")
-	username      = os.Getenv("TWITTER_USERNAME")
-	password      = os.Getenv("TWITTER_PASSWORD")
-	email         = os.Getenv("TWITTER_EMAIL")
 	skipAuthTest  = os.Getenv("SKIP_AUTH_TEST") != ""
 	testScraper   = newTestScraper(false)
 )
@@ -47,16 +44,8 @@ func init() {
 		return
 	}
 
-	if username != "" && password != "" {
-		err := testScraper.Login(username, password, email)
-		if err != nil {
-			panic(fmt.Sprintf("Login() error = %v", err))
-		}
-		return
-	}
-
 	skipAuthTest = true
-	fmt.Println("None of any auth data provided, skipping all tests that requires auth")
+	fmt.Println("No cookie authentication data provided, skipping all tests that require auth")
 }
 
 func newTestScraper(skip_auth bool) *twitterscraper.Scraper {
@@ -69,36 +58,7 @@ func newTestScraper(skip_auth bool) *twitterscraper.Scraper {
 		}
 	}
 
-	// Check connection by getting guest token
-	if err := s.GetGuestToken(); err != nil {
-		panic(fmt.Sprintf("cannot get guest token, can also be error with connection to twitter.\n %v", err))
-	}
-
-	if skip_auth == true || !skipAuthTest {
-		s.ClearGuestToken()
-		return s
-	}
-
 	return s
-}
-
-func TestLoginPassword(t *testing.T) {
-	if skipAuthTest || username == "" || password == "" {
-		t.Skip("Skipping test due to environment variable")
-	}
-	scraper := newTestScraper(true)
-	if err := scraper.Login(username, password, email); err != nil {
-		t.Fatalf("Login() error = %v", err)
-	}
-	if !scraper.IsLoggedIn() {
-		t.Fatalf("Expected IsLoggedIn() = true")
-	}
-	if err := scraper.Logout(); err != nil {
-		t.Errorf("Logout() error = %v", err)
-	}
-	if scraper.IsLoggedIn() {
-		t.Error("Expected IsLoggedIn() = false")
-	}
 }
 
 func TestLoginToken(t *testing.T) {
@@ -129,25 +89,4 @@ func TestLoginCookie(t *testing.T) {
 	if !scraper.IsLoggedIn() {
 		t.Error("Expected IsLoggedIn() = true")
 	}
-}
-
-func TestLoginOpenAccount(t *testing.T) {
-	if os.Getenv("TEST_OPEN_ACCOUNT") == "" {
-		t.Skip("Skipping test due to environment variable")
-	}
-
-	scraper := twitterscraper.New()
-	if proxy != "" && proxyRequired {
-		err := scraper.SetProxy(proxy)
-		if err != nil {
-			panic(fmt.Sprintf("SetProxy() error = %v", err))
-		}
-	}
-	account, err := scraper.LoginOpenAccount()
-
-	if err != nil {
-		t.Fatalf("LoginOpenAccount() error = %v", err)
-	}
-
-	fmt.Printf("%#v", account)
 }

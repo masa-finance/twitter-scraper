@@ -17,14 +17,7 @@ func (s *Scraper) GetTrends() ([]string, error) {
 	req.URL.RawQuery = q.Encode()
 
 	var jsn timelineV1
-	curBearerToken := s.bearerToken
-	if curBearerToken != bearerToken2 {
-		s.setBearerToken(bearerToken2)
-	}
 	err = s.RequestAPI(req, &jsn)
-	if curBearerToken != bearerToken2 {
-		s.setBearerToken(curBearerToken)
-	}
 	if err != nil {
 		return nil, err
 	}

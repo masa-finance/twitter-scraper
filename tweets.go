@@ -24,9 +24,6 @@ func (s *Scraper) FetchTweets(user string, maxTweetsNbr int, cursor string) ([]*
 		return nil, "", err
 	}
 
-	if s.isOpenAccount {
-		return s.FetchTweetsByUserIDLegacy(userID, maxTweetsNbr, cursor)
-	}
 	return s.FetchTweetsByUserID(userID, maxTweetsNbr, cursor)
 }
 
@@ -198,25 +195,7 @@ func (s *Scraper) FetchTweetsByUserIDLegacy(userID string, maxTweetsNbr int, cur
 
 // GetTweet get a single tweet by ID.
 func (s *Scraper) GetTweet(id string) (*Tweet, error) {
-	if s.isOpenAccount {
-		req, err := s.newRequest("GET", "https://api.twitter.com/2/timeline/conversation/"+id+".json")
-		if err != nil {
-			return nil, err
-		}
-
-		var timeline timelineV1
-		err = s.RequestAPI(req, &timeline)
-		if err != nil {
-			return nil, err
-		}
-
-		tweets, _ := timeline.parseTweets()
-		for _, tweet := range tweets {
-			if tweet.ID == id {
-				return tweet, nil
-			}
-		}
-	} else if s.isLogged {
+	if s.isLogged {
 		req, err := s.newRequest("GET", "https://twitter.com/i/api/graphql/VWFGPVAGkZMGRKGe3GFFnA/TweetDetail")
 		if err != nil {
 			return nil, err
@@ -261,19 +240,7 @@ func (s *Scraper) GetTweet(id string) (*Tweet, error) {
 
 		var conversation threadedConversation
 
-		// Surprisingly, if bearerToken2 is not set, then animated GIFs are not
-		// present in the response for tweets with a GIF + a photo like this one:
-		// https://twitter.com/Twitter/status/1580661436132757506
-		curBearerToken := s.bearerToken
-		if curBearerToken != bearerToken2 {
-			s.setBearerToken(bearerToken2)
-		}
-
 		err = s.RequestAPI(req, &conversation)
-
-		if curBearerToken != bearerToken2 {
-			s.setBearerToken(curBearerToken)
-		}
 
 		if err != nil {
 			return nil, err
@@ -330,19 +297,7 @@ func (s *Scraper) GetTweet(id string) (*Tweet, error) {
 
 		var result tweetResult
 
-		// Surprisingly, if bearerToken2 is not set, then animated GIFs are not
-		// present in the response for tweets with a GIF + a photo like this one:
-		// https://twitter.com/Twitter/status/1580661436132757506
-		curBearerToken := s.bearerToken
-		if curBearerToken != bearerToken2 {
-			s.setBearerToken(bearerToken2)
-		}
-
 		err = s.RequestAPI(req, &result)
-
-		if curBearerToken != bearerToken2 {
-			s.setBearerToken(curBearerToken)
-		}
 
 		if err != nil {
 			return nil, err
