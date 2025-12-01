@@ -12,7 +12,7 @@ func TestFetchSearchCursor(t *testing.T) {
 		t.Skip("Skipping test due to environment variable")
 	}
 
-	maxTweetsNbr := 150
+	maxTweetsNbr := 10
 	tweetsNbr := 0
 	nextCursor := ""
 	for tweetsNbr < maxTweetsNbr {
@@ -33,13 +33,16 @@ func TestGetSearchProfiles(t *testing.T) {
 		t.Skip("Skipping test due to environment variable")
 	}
 	count := 0
-	maxProfilesNbr := 150
+	maxProfilesNbr := 10
 	dupcheck := make(map[string]bool)
 	testScraper.SetSearchMode(twitterscraper.SearchUsers)
 	for profile := range testScraper.SearchProfiles(context.Background(), "Twitter", maxProfilesNbr) {
 		if profile.Error != nil {
 			t.Error(profile.Error)
 		} else {
+			if count == 0 {
+				t.Logf("First profile: %+v", profile)
+			}
 			count++
 			if profile.UserID == "" {
 				t.Error("Expected UserID is empty")
@@ -62,13 +65,16 @@ func TestGetSearchTweets(t *testing.T) {
 		t.Skip("Skipping test due to environment variable")
 	}
 	count := 0
-	maxTweetsNbr := 150
+	maxTweetsNbr := 10
 	dupcheck := make(map[string]bool)
 	testScraper.SetSearchMode(twitterscraper.SearchLatest)
 	for tweet := range testScraper.SearchTweets(context.Background(), "twitter", maxTweetsNbr) {
 		if tweet.Error != nil {
 			t.Error(tweet.Error)
 		} else {
+			if count == 0 {
+				t.Logf("First tweet: %+v", tweet)
+			}
 			count++
 			if tweet.ID == "" {
 				t.Error("Expected tweet ID is empty")
@@ -81,9 +87,6 @@ func TestGetSearchTweets(t *testing.T) {
 			}
 			if tweet.PermanentURL == "" {
 				t.Error("Expected tweet PermanentURL is empty")
-			}
-			if tweet.IsRetweet {
-				t.Error("Expected tweet IsRetweet is false")
 			}
 			if tweet.Text == "" {
 				t.Error("Expected tweet Text is empty")

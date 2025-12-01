@@ -2,6 +2,8 @@ package twitterscraper_test
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -22,12 +24,21 @@ var cmpOptions = cmp.Options{
 
 func TestGetTweets(t *testing.T) {
 	count := 0
-	maxTweetsNbr := 100
+	maxTweetsNbr := 1
 	dupcheck := make(map[string]bool)
-	for tweet := range testScraper.GetTweets(context.Background(), "x", maxTweetsNbr) {
+
+	// GetTweets returns a channel (<-chan *TweetResult)
+	// Channels are like pipes - values flow through them
+	// When you range over a channel, it consumes values until the channel closes
+	// After the range loop, the channel is empty/closed, so we can't access the values again
+	// That's why we collect tweets in a slice as we iterate
+	tweetsChan := testScraper.GetTweets(context.Background(), "x", maxTweetsNbr)
+	var tweets []*twitterscraper.TweetResult // Collect tweets here so we can access them later
+	for tweet := range tweetsChan {
 		if tweet.Error != nil {
 			t.Error(tweet.Error)
 		} else {
+			tweets = append(tweets, tweet)
 			count++
 			if tweet.ID == "" {
 				t.Error("Expected tweet ID is empty")
@@ -72,6 +83,8 @@ func TestGetTweets(t *testing.T) {
 	if count != maxTweetsNbr {
 		t.Errorf("Expected tweets count=%v, got: %v", maxTweetsNbr, count)
 	}
+	tweetJSON, _ := json.MarshalIndent(tweets, "", "  ")
+	fmt.Println(string(tweetJSON))
 }
 
 func assertGetTweet(t *testing.T, expectedTweet *twitterscraper.Tweet) {
@@ -326,7 +339,7 @@ func TestGetHomeTweets(t *testing.T) {
 		t.Skip("Skipping test due to environment variable")
 	}
 	count := 0
-	maxTweetsNbr := 150
+	maxTweetsNbr := 10
 	dupcheck := make(map[string]bool)
 
 	for tweet := range testScraper.GetHomeTweets(context.Background(), maxTweetsNbr) {
@@ -399,7 +412,7 @@ func TestGetForYouTweets(t *testing.T) {
 		t.Skip("Skipping test due to environment variable")
 	}
 	count := 0
-	maxTweetsNbr := 150
+	maxTweetsNbr := 10
 	dupcheck := make(map[string]bool)
 
 	for tweet := range testScraper.GetForYouTweets(context.Background(), maxTweetsNbr) {

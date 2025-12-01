@@ -30,6 +30,15 @@ type Scraper struct {
 	userAgent      string
 	searchMode     SearchMode
 	wg             sync.WaitGroup
+
+	// Transaction ID Cache
+	txCtx *transactionContext
+}
+
+type transactionContext struct {
+	keyBytes     []int
+	animationKey string
+	updatedAt    time.Time
 }
 
 // SearchMode type

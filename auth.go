@@ -23,10 +23,10 @@ const (
 	logoutURL = "https://api.twitter.com/1.1/account/logout.json"
 	oAuthURL  = "https://api.twitter.com/oauth2/token"
 	// Doesn't require x-client-transaction-id header in auth. x-rate-limit-limit: 2000
-	bearerToken1 = "AAAAAAAAAAAAAAAAAAAAAFQODgEAAAAAVHTp76lzh3rFzcHbmHVvQxYYpTw%3DckAlMINMjmCwxUcaXbAN4XqJVdgMJaHqNOFgPMK0zN1qLqLQCF"
+	bearerToken1 = "AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA"
 	// HOTFIX: Returns 404 error; Requires x-client-transaction-id header in auth.
 	// bearerToken2      = "AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA"
-	bearerToken2      = "AAAAAAAAAAAAAAAAAAAAAFQODgEAAAAAVHTp76lzh3rFzcHbmHVvQxYYpTw%3DckAlMINMjmCwxUcaXbAN4XqJVdgMJaHqNOFgPMK0zN1qLqLQCF"
+	bearerToken2      = "AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA"
 	appConsumerKey    = "3nVuSoBZnx6U4vzUxf5w"
 	appConsumerSecret = "Bcs59EFbbsdF6Sl9Ng71smgStWEGwXXKSjYvPVt7qys"
 )
@@ -152,13 +152,8 @@ func (s *Scraper) getFlowToken(data map[string]interface{}) (string, error) {
 func (s *Scraper) IsLoggedIn() bool {
 	s.isLogged = true
 	s.setBearerToken(bearerToken1)
-	req, err := http.NewRequest("GET", "https://api.twitter.com/1.1/account/verify_credentials.json", nil)
+	_, err := s.GetAccountSettings()
 	if err != nil {
-		return false
-	}
-	var verify verifyCredentials
-	err = s.RequestAPI(req, &verify)
-	if err != nil || verify.Errors != nil {
 		s.isLogged = false
 		s.setBearerToken(bearerToken)
 	} else {
