@@ -1,7 +1,6 @@
 package twitterscraper
 
 import (
-	"encoding/base64"
 	"fmt"
 	"math"
 	"strings"
@@ -72,10 +71,6 @@ func floatToHex(x float64) string {
 	return strings.Join(result, "")
 }
 
-func base64Encode(input []byte) string {
-	return base64.StdEncoding.EncodeToString(input)
-}
-
 func round(val float64) float64 {
 	return math.Round(val)
 }
@@ -83,4 +78,3 @@ func round(val float64) float64 {
 func round2(val float64) float64 {
 	return math.Round(val*100) / 100
 }
-

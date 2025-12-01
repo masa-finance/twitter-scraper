@@ -65,7 +65,7 @@ type user struct {
 // GetProfile return parsed user profile.
 func (s *Scraper) GetProfile(username string) (Profile, error) {
 	var jsn user
-	req, err := http.NewRequest("GET", "https://api.twitter.com/graphql/Yka-W8dz7RaEuQNkroPkYw/UserByScreenName", nil)
+	req, err := http.NewRequest("GET", "https://api.x.com/graphql/Yka-W8dz7RaEuQNkroPkYw/UserByScreenName", nil)
 	if err != nil {
 		return Profile{}, err
 	}
@@ -126,7 +126,7 @@ func (s *Scraper) GetProfile(username string) (Profile, error) {
 
 func (s *Scraper) GetProfileByID(userID string) (Profile, error) {
 	var jsn user
-	req, err := http.NewRequest("GET", "https://twitter.com/i/api/graphql/Qw77dDjp9xCpUY-AXwt-yQ/UserByRestId", nil)
+	req, err := http.NewRequest("GET", "https://api.x.com/graphql/Qw77dDjp9xCpUY-AXwt-yQ/UserByRestId", nil)
 	if err != nil {
 		return Profile{}, err
 	}

@@ -10,7 +10,7 @@ type ThreadCursor struct {
 }
 
 func (s *Scraper) GetTweetReplies(id string, cursor string) ([]*Tweet, []*ThreadCursor, error) {
-	req, err := s.newRequest("GET", "https://twitter.com/i/api/graphql/ldqoq5MmFHN1FhMGvzC9Jg/TweetDetail")
+	req, err := s.newRequest("GET", "https://api.x.com/graphql/ldqoq5MmFHN1FhMGvzC9Jg/TweetDetail")
 	if err != nil {
 		return nil, nil, err
 	}

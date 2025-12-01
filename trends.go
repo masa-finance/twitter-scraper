@@ -4,7 +4,7 @@ import "fmt"
 
 // GetTrends return list of trends.
 func (s *Scraper) GetTrends() ([]string, error) {
-	req, err := s.newRequest("GET", "https://api.twitter.com/2/guide.json")
+	req, err := s.newRequest("GET", "https://api.x.com/2/guide.json")
 	if err != nil {
 		return nil, err
 	}
