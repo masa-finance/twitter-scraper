@@ -1,25 +1,15 @@
 package twitterscraper
 
 import (
-	"bytes"
-	"crypto/hmac"
-	"crypto/sha1"
-	"encoding/base64"
 	"net/http"
 	"net/http/cookiejar"
-	"net/url"
-	"strconv"
 	"strings"
 	"time"
 )
 
 const (
-	logoutURL = "https://api.x.com/1.1/account/logout.json"
-	// Bearer token that requires x-client-transaction-id header
-	bearerToken1      = "AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA"
-	bearerToken2      = "AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA"
-	appConsumerKey    = "3nVuSoBZnx6U4vzUxf5w"
-	appConsumerSecret = "Bcs59EFbbsdF6Sl9Ng71smgStWEGwXXKSjYvPVt7qys"
+	// Bearer token for X.com API - requires x-client-transaction-id header for authenticated requests
+	bearerToken2 = "AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA"
 )
 
 // IsLoggedIn checks if scraper has valid auth cookies.
@@ -37,20 +27,8 @@ func (s *Scraper) IsLoggedIn() bool {
 
 // Logout resets the session
 func (s *Scraper) Logout() error {
-	req, err := http.NewRequest("POST", logoutURL, nil)
-	if err != nil {
-		return err
-	}
-	err = s.RequestAPI(req, nil)
-	if err != nil {
-		return err
-	}
-
 	s.isLogged = false
-	s.isOpenAccount = false
 	s.guestToken = ""
-	s.oAuthToken = ""
-	s.oAuthSecret = ""
 	s.client.Jar, _ = cookiejar.New(nil)
 	s.setBearerToken(bearerToken)
 	return nil
@@ -87,75 +65,24 @@ type AuthToken struct {
 
 // SetAuthToken sets authentication using auth_token and ct0 cookies
 func (s *Scraper) SetAuthToken(token AuthToken) {
-	expires := time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC)
-	cookies := []*http.Cookie{{
-		Name:       "auth_token",
-		Value:      token.Token,
-		Path:       "",
-		Domain:     "x.com",
-		Expires:    expires,
-		RawExpires: "",
-		MaxAge:     0,
-		Secure:     false,
-		HttpOnly:   false,
-		SameSite:   0,
-		Raw:        "",
-		Unparsed:   nil,
-	}, {
-		Name:       "ct0",
-		Value:      token.CSRFToken,
-		Path:       "",
-		Domain:     "x.com",
-		Expires:    expires,
-		RawExpires: "",
-		MaxAge:     0,
-		Secure:     false,
-		HttpOnly:   false,
-		SameSite:   0,
-		Raw:        "",
-		Unparsed:   nil,
-	}}
-
+	expires := time.Date(2030, time.January, 1, 0, 0, 0, 0, time.UTC)
+	cookies := []*http.Cookie{
+		{
+			Name:    "auth_token",
+			Value:   token.Token,
+			Domain:  "x.com",
+			Path:    "/",
+			Expires: expires,
+			Secure:  true,
+		},
+		{
+			Name:    "ct0",
+			Value:   token.CSRFToken,
+			Domain:  "x.com",
+			Path:    "/",
+			Expires: expires,
+			Secure:  true,
+		},
+	}
 	s.SetCookies(cookies)
-}
-
-func (s *Scraper) sign(method string, ref *url.URL) string {
-	m := make(map[string]string)
-	m["oauth_consumer_key"] = appConsumerKey
-	m["oauth_nonce"] = "0"
-	m["oauth_signature_method"] = "HMAC-SHA1"
-	m["oauth_timestamp"] = strconv.FormatInt(time.Now().Unix(), 10)
-	m["oauth_token"] = s.oAuthToken
-
-	key := []byte(appConsumerSecret + "&" + s.oAuthSecret)
-	h := hmac.New(sha1.New, key)
-
-	query := ref.Query()
-	for k, v := range m {
-		query.Set(k, v)
-	}
-
-	req := []string{method, ref.Scheme + "://" + ref.Host + ref.Path, query.Encode()}
-	var reqBuf bytes.Buffer
-	for _, value := range req {
-		if reqBuf.Len() > 0 {
-			reqBuf.WriteByte('&')
-		}
-		reqBuf.WriteString(url.QueryEscape(value))
-	}
-	h.Write(reqBuf.Bytes())
-
-	m["oauth_signature"] = base64.StdEncoding.EncodeToString(h.Sum(nil))
-
-	var b bytes.Buffer
-	for k, v := range m {
-		if b.Len() > 0 {
-			b.WriteByte(',')
-		}
-		b.WriteString(k)
-		b.WriteByte('=')
-		b.WriteString(url.QueryEscape(v))
-	}
-
-	return "OAuth " + b.String()
 }

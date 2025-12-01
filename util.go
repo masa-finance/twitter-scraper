@@ -55,7 +55,7 @@ func (s *Scraper) newRequest(method string, url string) (*http.Request, error) {
 	q.Add("include_ext_trusted_friends_metadata", "true")
 	q.Add("send_error_codes", "true")
 	q.Add("simple_quoted_tweet", "true")
-	q.Add("include_tweet_replies", strconv.FormatBool(s.includeReplies))
+	q.Add("include_tweet_replies", "true")
 	q.Add("ext", "mediaStats,highlightedLabel,hasNftAvatar,voiceInfo,birdwatchPivot,enrichments,superFollowMetadata,unmentionInfo,editControl,collab_control,vibe")
 	req.URL.RawQuery = q.Encode()
 

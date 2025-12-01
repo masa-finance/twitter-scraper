@@ -75,11 +75,7 @@ func (s *Scraper) setGuestToken(req *http.Request) error {
 }
 
 func (s *Scraper) setAuthorizationHeader(req *http.Request) {
-	if s.oAuthToken != "" && s.oAuthSecret != "" {
-		req.Header.Set("Authorization", s.sign(req.Method, req.URL))
-	} else {
-		req.Header.Set("Authorization", "Bearer "+s.bearerToken)
-	}
+	req.Header.Set("Authorization", "Bearer "+s.bearerToken)
 }
 
 func (s *Scraper) setCSRFToken(req *http.Request) {
