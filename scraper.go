@@ -21,15 +21,20 @@ type Scraper struct {
 	delay          int64
 	guestToken     string
 	guestCreatedAt time.Time
-	includeReplies bool
 	isLogged       bool
-	isOpenAccount  bool
-	oAuthToken     string
-	oAuthSecret    string
 	proxy          string
 	userAgent      string
 	searchMode     SearchMode
 	wg             sync.WaitGroup
+
+	// Transaction ID Cache
+	txCtx *transactionContext
+}
+
+type transactionContext struct {
+	keyBytes     []int
+	animationKey string
+	updatedAt    time.Time
 }
 
 // SearchMode type
@@ -50,7 +55,9 @@ const (
 
 // default http client timeout
 const DefaultClientTimeout = 10 * time.Second
-const DefaultUserAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36"
+
+// DefaultUserAgent - Chrome 131 on macOS (December 2024)
+const DefaultUserAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
 
 // New creates a Scraper object
 func New() *Scraper {
@@ -84,12 +91,6 @@ func (s *Scraper) SetSearchMode(mode SearchMode) *Scraper {
 // WithDelay add delay between API requests (in seconds)
 func (s *Scraper) WithDelay(seconds int64) *Scraper {
 	s.delay = seconds
-	return s
-}
-
-// WithReplies enable/disable load timeline with tweet replies
-func (s *Scraper) WithReplies(b bool) *Scraper {
-	s.includeReplies = b
 	return s
 }
 

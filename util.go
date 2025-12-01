@@ -16,7 +16,7 @@ var (
 	reHashtag    = regexp.MustCompile(`\B(\#\S+\b)`)
 	reTwitterURL = regexp.MustCompile(`https:(\/\/t\.co\/([A-Za-z0-9]|[A-Za-z]){10})`)
 	reUsername   = regexp.MustCompile(`\B(\@\S{1,15}\b)`)
-	twURL        = urlParse("https://twitter.com")
+	twURL        = urlParse("https://x.com")
 )
 
 func (s *Scraper) newRequest(method string, url string) (*http.Request, error) {
@@ -55,7 +55,7 @@ func (s *Scraper) newRequest(method string, url string) (*http.Request, error) {
 	q.Add("include_ext_trusted_friends_metadata", "true")
 	q.Add("send_error_codes", "true")
 	q.Add("simple_quoted_tweet", "true")
-	q.Add("include_tweet_replies", strconv.FormatBool(s.includeReplies))
+	q.Add("include_tweet_replies", "true")
 	q.Add("ext", "mediaStats,highlightedLabel,hasNftAvatar,voiceInfo,birdwatchPivot,enrichments,superFollowMetadata,unmentionInfo,editControl,collab_control,vibe")
 	req.URL.RawQuery = q.Encode()
 

@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-const bearerToken string = "AAAAAAAAAAAAAAAAAAAAAPYXBAAAAAAACLXUNDekMxqa8h%2F40K4moUkGsoc%3DTYfbDKbT3jJPCEVnMYqilB28NHfOPqkca3qaAxGfsyKCs0wRbw"
+const bearerToken string = "AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA"
 
 // RequestAPI get JSON from frontend API and decodes it
 func (s *Scraper) RequestAPI(req *http.Request, target interface{}) error {
@@ -50,6 +50,17 @@ func (s *Scraper) prepareRequest(req *http.Request) error {
 	s.setAuthorizationHeader(req)
 	s.setCSRFToken(req)
 
+	if s.isLogged {
+		tid, err := s.GetTransactionID(req.Method, req.URL.Path)
+		if err == nil && tid != "" {
+			req.Header.Set("x-client-transaction-id", tid)
+		}
+		req.Header.Set("X-Twitter-Active-User", "yes")
+		req.Header.Set("X-Twitter-Auth-Type", "OAuth2Session")
+		req.Header.Set("X-Twitter-Client-Language", "en")
+		req.Header.Set("Referer", "https://x.com")
+	}
+
 	return nil
 }
 
@@ -64,11 +75,7 @@ func (s *Scraper) setGuestToken(req *http.Request) error {
 }
 
 func (s *Scraper) setAuthorizationHeader(req *http.Request) {
-	if s.oAuthToken != "" && s.oAuthSecret != "" {
-		req.Header.Set("Authorization", s.sign(req.Method, req.URL))
-	} else {
-		req.Header.Set("Authorization", "Bearer "+s.bearerToken)
-	}
+	req.Header.Set("Authorization", "Bearer "+s.bearerToken)
 }
 
 func (s *Scraper) setCSRFToken(req *http.Request) {
@@ -103,7 +110,7 @@ func (s *Scraper) handleResponse(resp *http.Response, target interface{}) error 
 
 // GetGuestToken from Twitter API
 func (s *Scraper) GetGuestToken() error {
-	req, err := http.NewRequest("POST", "https://api.twitter.com/1.1/guest/activate.json", nil)
+	req, err := http.NewRequest("POST", "https://api.x.com/1.1/guest/activate.json", nil)
 	if err != nil {
 		return err
 	}

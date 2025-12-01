@@ -46,7 +46,7 @@ type AccountList struct {
 
 func (s *Scraper) GetAccountSettings() (AccountSettings, error) {
 	var settings AccountSettings
-	req, err := s.newRequest("GET", "https://api.twitter.com/1.1/account/settings.json")
+	req, err := s.newRequest("GET", "https://api.x.com/1.1/account/settings.json")
 	if err != nil {
 		return settings, err
 	}
@@ -57,7 +57,7 @@ func (s *Scraper) GetAccountSettings() (AccountSettings, error) {
 
 func (s *Scraper) GetAccountList() ([]Account, error) {
 	var list AccountList
-	req, err := s.newRequest("GET", "https://api.twitter.com/1.1/account/multi/list.json")
+	req, err := s.newRequest("GET", "https://api.x.com/1.1/account/multi/list.json")
 	if err != nil {
 		return list.Users, err
 	}
