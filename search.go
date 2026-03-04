@@ -37,9 +37,18 @@ func (timeline *searchTimeline) parseTweets() ([]*Tweet, string) {
 				if entry.Content.ItemContent.TweetDisplayType == "Tweet" {
 					var legacy *legacyTweet = &entry.Content.ItemContent.TweetResults.Result.Legacy
 					var user *legacyUser = &entry.Content.ItemContent.TweetResults.Result.Core.UserResults.Result.Legacy
+					var coreUserInfo = &entry.Content.ItemContent.TweetResults.Result.Core.UserResults.Result.CoreUserInfo
 					if entry.Content.ItemContent.TweetResults.Result.Typename == "TweetWithVisibilityResults" {
 						legacy = &entry.Content.ItemContent.TweetResults.Result.Tweet.Legacy
 						user = &entry.Content.ItemContent.TweetResults.Result.Tweet.Core.UserResults.Result.Legacy
+						coreUserInfo = &entry.Content.ItemContent.TweetResults.Result.Tweet.Core.UserResults.Result.CoreUserInfo
+					}
+					// Fall back to CoreUserInfo for ScreenName and Name (Twitter API change)
+					if user.ScreenName == "" && coreUserInfo.ScreenName != "" {
+						user.ScreenName = coreUserInfo.ScreenName
+					}
+					if user.Name == "" && coreUserInfo.Name != "" {
+						user.Name = coreUserInfo.Name
 					}
 					if tweet := parseLegacyTweet(user, legacy); tweet != nil {
 						var views = entry.Content.ItemContent.TweetResults.Result.Views.Count

@@ -12,6 +12,11 @@ type tweet struct {
 			Result struct {
 				IsBlueVerified bool       `json:"is_blue_verified"`
 				Legacy         legacyUser `json:"legacy"`
+				CoreUserInfo   struct {
+					CreatedAt  string `json:"created_at"`
+					Name       string `json:"name"`
+					ScreenName string `json:"screen_name"`
+				} `json:"core"`
 			} `json:"result"`
 		} `json:"user_results"`
 	} `json:"core"`
@@ -79,9 +84,18 @@ func (result *result) parse() *Tweet {
 	}
 	var legacy *legacyTweet = &result.Legacy
 	var user *legacyUser = &result.Core.UserResults.Result.Legacy
+	var coreUserInfo = &result.Core.UserResults.Result.CoreUserInfo
 	if result.Typename == "TweetWithVisibilityResults" {
 		legacy = &result.Tweet.Legacy
 		user = &result.Tweet.Core.UserResults.Result.Legacy
+		coreUserInfo = &result.Tweet.Core.UserResults.Result.CoreUserInfo
+	}
+	// Fall back to CoreUserInfo for ScreenName and Name (Twitter API change)
+	if user.ScreenName == "" && coreUserInfo.ScreenName != "" {
+		user.ScreenName = coreUserInfo.ScreenName
+	}
+	if user.Name == "" && coreUserInfo.Name != "" {
+		user.Name = coreUserInfo.Name
 	}
 	tw := parseLegacyTweet(user, legacy)
 	if tw == nil {
