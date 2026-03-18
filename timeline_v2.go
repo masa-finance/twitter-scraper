@@ -238,24 +238,29 @@ type timelineV2 struct {
 func (timeline *timelineV2) parseTweets() ([]*Tweet, string) {
 	var cursor string
 	var tweets []*Tweet
-	for _, instruction := range timeline.Data.User.Result.TimelineV2.Timeline.Instructions {
-		for _, entry := range instruction.Entries {
-			if entry.Content.CursorType == "Bottom" {
-				cursor = entry.Content.Value
-				continue
+
+	parseEntry := func(ent entry) {
+		if ent.Content.CursorType == "Bottom" {
+			cursor = ent.Content.Value
+			return
+		}
+		if ent.Content.ItemContent.TweetResults.Result.Typename == "Tweet" || ent.Content.ItemContent.TweetResults.Result.Typename == "TweetWithVisibilityResults" {
+			if tweet := ent.Content.ItemContent.TweetResults.Result.parse(); tweet != nil {
+				tweets = append(tweets, tweet)
 			}
-			if entry.Content.ItemContent.TweetResults.Result.Typename == "Tweet" || entry.Content.ItemContent.TweetResults.Result.Typename == "TweetWithVisibilityResults" {
-				if tweet := entry.Content.ItemContent.TweetResults.Result.parse(); tweet != nil {
+		}
+		if len(ent.Content.Items) > 0 {
+			for _, item := range ent.Content.Items {
+				if tweet := item.Item.ItemContent.TweetResults.Result.parse(); tweet != nil {
 					tweets = append(tweets, tweet)
 				}
 			}
-			if len(entry.Content.Items) > 0 {
-				for _, item := range entry.Content.Items {
-					if tweet := item.Item.ItemContent.TweetResults.Result.parse(); tweet != nil {
-						tweets = append(tweets, tweet)
-					}
-				}
-			}
+		}
+	}
+
+	for _, instruction := range timeline.Data.User.Result.TimelineV2.Timeline.Instructions {
+		for _, entry := range instruction.Entries {
+			parseEntry(entry)
 		}
 		if len(instruction.ModuleItems) > 0 {
 			for _, entry := range instruction.ModuleItems {
@@ -267,6 +272,17 @@ func (timeline *timelineV2) parseTweets() ([]*Tweet, string) {
 			}
 		}
 	}
+
+	// Some current UserTweets responses come back under timeline.timeline instead of timeline_v2.timeline.
+	if len(tweets) == 0 {
+		for _, instruction := range timeline.Data.User.Result.Timeline.Timeline.Instructions {
+			for _, entry := range instruction.Entries {
+				parseEntry(entry)
+			}
+			parseEntry(instruction.Entry)
+		}
+	}
+
 	return tweets, cursor
 }
 

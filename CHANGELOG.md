@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Shared `graphqlWebClientFeatures()` for web GraphQL calls; updated **TweetDetail** (`xIYgDwjboktoFeXe_fgacw`), **UserTweetsAndReplies** (`zedqO5hg41Ox6UeAKsWWzA`), **Retweeters** (`uhTjAvG7nm0lyrfujroWUw`). **UserTweets** uses same feature blob + `fieldToggles`.
+- **HomeTimeline**: `FetchHomeTweets` / `GetHomeTweets` (`L8Lb9oomccM012S7fQ-QKA`, variables from DevTools).
+- Guest **TweetResultByRestId** updated to live `api.x.com/graphql/zy39CwTyYhU-_0LP7dljjg/...` payload and field toggles.
+- Earlier: SearchTimeline, UserByScreenName from DevTools captures.
+
 ## v0.0.13
 
 01.10.2024

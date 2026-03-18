@@ -25,6 +25,12 @@ func (s *Scraper) newRequest(method string, url string) (*http.Request, error) {
 		return nil, err
 	}
 
+	// Current GraphQL endpoints on x.com carry their own variables/features/fieldToggles
+	// and do not include the legacy REST query params below.
+	if strings.Contains(req.URL.Path, "/graphql/") {
+		return req, nil
+	}
+
 	q := req.URL.Query()
 	q.Add("include_profile_interstitial_type", "1")
 	q.Add("include_blocking", "1")
