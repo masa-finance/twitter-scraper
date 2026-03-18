@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Rotated all internal GraphQL query IDs to match **[d60/twikit](https://github.com/d60/twikit)** `main` (`client/gql.py`): `SearchTimeline`, `UserTweets`, `UserTweetsAndReplies`, `TweetDetail`, `TweetResultByRestId`, `Retweeters`, `UserByScreenName`, `UserByRestId`. X serves multiple bundle versions; if an endpoint 404s, try refreshing IDs from twikit or DevTools.
+
 ## v0.0.13
 
 01.10.2024

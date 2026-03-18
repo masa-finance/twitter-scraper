@@ -41,7 +41,7 @@ func (s *Scraper) FetchTweetsAndRepliesByUserID(userID string, maxReplysNbr int,
 		maxReplysNbr = 200
 	}
 
-	req, err := s.newRequest("GET", "https://api.x.com/graphql/bt4TKuFz4T7Ckk-VvQVSow/UserTweetsAndReplies")
+	req, err := s.newRequest("GET", "https://api.x.com/graphql/vMkJyzx1wdmvOeeNG0n6Wg/UserTweetsAndReplies")
 	if err != nil {
 		return nil, "", err
 	}
@@ -106,7 +106,7 @@ func (s *Scraper) FetchTweetsByUserID(userID string, maxTweetsNbr int, cursor st
 		maxTweetsNbr = 200
 	}
 
-	req, err := s.newRequest("GET", "https://api.x.com/graphql/UGi7tjRPr-d_U3bCPIko5Q/UserTweets")
+	req, err := s.newRequest("GET", "https://api.x.com/graphql/QWF3SzpHmykQHsQMixG0cg/UserTweets")
 	if err != nil {
 		return nil, "", err
 	}
@@ -166,7 +166,7 @@ func (s *Scraper) FetchTweetsByUserID(userID string, maxTweetsNbr int, cursor st
 func (s *Scraper) GetTweet(id string) (*Tweet, error) {
 	if s.isLogged {
 		// Use TweetDetail endpoint for authenticated requests
-		req, err := s.newRequest("GET", "https://api.x.com/graphql/VWFGPVAGkZMGRKGe3GFFnA/TweetDetail")
+		req, err := s.newRequest("GET", "https://api.x.com/graphql/U0HTv-bAWTBYylwEMT7x5A/TweetDetail")
 		if err != nil {
 			return nil, err
 		}
@@ -229,7 +229,7 @@ func (s *Scraper) GetTweet(id string) (*Tweet, error) {
 		}
 	} else {
 		// Use TweetResultByRestId for guest/unauthenticated requests
-		req, err := s.newRequest("GET", "https://api.x.com/graphql/xBtHv5-Xsk268T5ng_OGNg/TweetResultByRestId")
+		req, err := s.newRequest("GET", "https://api.x.com/graphql/Xl5pC_lBk_gcO2ItU39DQw/TweetResultByRestId")
 		if err != nil {
 			return nil, err
 		}

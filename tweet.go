@@ -11,7 +11,7 @@ func (s *Scraper) GetTweetRetweeters(tweetId string, maxUsersNbr int, cursor str
 		maxUsersNbr = 200
 	}
 
-	req, err := s.newRequest("GET", "https://api.x.com/graphql/8019obfgnveiPiJuS2Rtow/Retweeters")
+	req, err := s.newRequest("GET", "https://api.x.com/graphql/X-XEqG5qHQSAwmvy00xfyQ/Retweeters")
 	if err != nil {
 		return nil, "", err
 	}

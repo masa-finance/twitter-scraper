@@ -6,7 +6,8 @@ import (
 	"strconv"
 )
 
-const searchURL = "https://api.x.com/graphql/bshMIjqDk8LTXTq4w91WKw/SearchTimeline"
+// SearchTimeline — query hashes track X web bundles; synced from d60/twikit client/gql.py.
+const searchURL = "https://api.x.com/graphql/flaR-PUMshxFWZWPNpq4zA/SearchTimeline"
 
 type searchTimeline struct {
 	Data struct {
