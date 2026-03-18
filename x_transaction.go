@@ -17,8 +17,9 @@ import (
 )
 
 var (
-	indicesRegex      = regexp.MustCompile(`\(\w{1}\[(\d{1,2})\],\s*16\)`)
-	onDemandFileRegex = regexp.MustCompile(`['|"]{1}ondemand\.s['|"]{1}:\s*['|"]{1}([\w]*)['|"]{1}`)
+	indicesRegex         = regexp.MustCompile(`\(\w{1}\[(\d{1,2})\],\s*16\)`)
+	onDemandFileRegex    = regexp.MustCompile(`['|"]{1}ondemand\.s['|"]{1}:\s*['|"]{1}([\w]*)['|"]{1}`)
+	onDemandChunkIDRegex = regexp.MustCompile(`(\d+):"ondemand\.s"`)
 )
 
 const (
@@ -104,10 +105,28 @@ func (s *Scraper) updateTransactionContext() error {
 	}
 
 	match := onDemandFileRegex.FindStringSubmatch(bodyString)
-	if len(match) < 2 {
-		return fmt.Errorf("ondemand file not found")
+	filename := ""
+	if len(match) >= 2 {
+		filename = match[1]
+	} else {
+		// Current x.com inlines the webpack chunk name map and hash map separately.
+		chunkMatch := onDemandChunkIDRegex.FindStringSubmatch(bodyString)
+		if len(chunkMatch) < 2 {
+			return fmt.Errorf("ondemand file not found")
+		}
+		chunkID := chunkMatch[1]
+		nameIdx := strings.Index(bodyString, chunkMatch[0])
+		hashIdx := strings.Index(bodyString[nameIdx+len(chunkMatch[0]):], fmt.Sprintf(`%s:"`, chunkID))
+		if hashIdx == -1 {
+			return fmt.Errorf("ondemand file hash not found")
+		}
+		hashStart := nameIdx + len(chunkMatch[0]) + hashIdx + len(chunkID) + 2
+		hashEnd := strings.Index(bodyString[hashStart:], `"`)
+		if hashEnd == -1 {
+			return fmt.Errorf("ondemand file hash parse failed")
+		}
+		filename = bodyString[hashStart : hashStart+hashEnd]
 	}
-	filename := match[1]
 	ondemandURL := fmt.Sprintf("https://abs.twimg.com/responsive-web/client-web/ondemand.s.%sa.js", filename)
 
 	reqJS, _ := http.NewRequest("GET", ondemandURL, nil)

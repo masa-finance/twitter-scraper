@@ -50,10 +50,15 @@ type user struct {
 	Data struct {
 		User struct {
 			Result struct {
-				RestID         string     `json:"rest_id"`
-				Legacy         legacyUser `json:"legacy"`
-				Message        string     `json:"message"`
-				IsBlueVerified bool       `json:"is_blue_verified"`
+				RestID       string     `json:"rest_id"`
+				Legacy       legacyUser `json:"legacy"`
+				CoreUserInfo struct {
+					CreatedAt  string `json:"created_at"`
+					Name       string `json:"name"`
+					ScreenName string `json:"screen_name"`
+				} `json:"core"`
+				Message        string `json:"message"`
+				IsBlueVerified bool   `json:"is_blue_verified"`
 			} `json:"result"`
 		} `json:"user"`
 	} `json:"data"`
@@ -65,20 +70,22 @@ type user struct {
 // GetProfile return parsed user profile.
 func (s *Scraper) GetProfile(username string) (Profile, error) {
 	var jsn user
-	req, err := http.NewRequest("GET", "https://api.x.com/graphql/NimuplG1OB7Fd2btCLdBOw/UserByScreenName", nil)
+	// Hash + payload from live x.com UserByScreenName (Mar 2026).
+	req, err := http.NewRequest("GET", "https://x.com/i/api/graphql/IGgvgiOx4QZndDHuD3x9TQ/UserByScreenName", nil)
 	if err != nil {
 		return Profile{}, err
 	}
 
 	variables := map[string]interface{}{
-		"screen_name":              username,
-		"withSafetyModeUserFields": true,
+		"screen_name":           username,
+		"withGrokTranslatedBio": true,
 	}
 
 	features := map[string]interface{}{
 		"hidden_profile_subscriptions_enabled":                              true,
-		"rweb_tipjar_consumption_enabled":                                   true,
-		"responsive_web_graphql_exclude_directive_enabled":                  true,
+		"profile_label_improvements_pcf_label_in_post_enabled":              true,
+		"responsive_web_profile_redirect_enabled":                           false,
+		"rweb_tipjar_consumption_enabled":                                   false,
 		"verified_phone_label_enabled":                                      false,
 		"subscriptions_verification_info_is_identity_verified_enabled":      true,
 		"subscriptions_verification_info_verified_since_enabled":            true,
@@ -89,10 +96,15 @@ func (s *Scraper) GetProfile(username string) (Profile, error) {
 		"responsive_web_graphql_skip_user_profile_image_extensions_enabled": false,
 		"responsive_web_graphql_timeline_navigation_enabled":                true,
 	}
+	fieldToggles := map[string]interface{}{
+		"withPayments":            false,
+		"withAuxiliaryUserLabels": true,
+	}
 
 	query := url.Values{}
 	query.Set("variables", mapToJSONString(variables))
 	query.Set("features", mapToJSONString(features))
+	query.Set("fieldToggles", mapToJSONString(fieldToggles))
 	req.URL.RawQuery = query.Encode()
 
 	err = s.RequestAPI(req, &jsn)
@@ -114,6 +126,15 @@ func (s *Scraper) GetProfile(username string) (Profile, error) {
 		return Profile{}, fmt.Errorf("user not found")
 	}
 	jsn.Data.User.Result.Legacy.IDStr = jsn.Data.User.Result.RestID
+	if jsn.Data.User.Result.Legacy.ScreenName == "" && jsn.Data.User.Result.CoreUserInfo.ScreenName != "" {
+		jsn.Data.User.Result.Legacy.ScreenName = jsn.Data.User.Result.CoreUserInfo.ScreenName
+	}
+	if jsn.Data.User.Result.Legacy.Name == "" && jsn.Data.User.Result.CoreUserInfo.Name != "" {
+		jsn.Data.User.Result.Legacy.Name = jsn.Data.User.Result.CoreUserInfo.Name
+	}
+	if jsn.Data.User.Result.Legacy.CreatedAt == "" && jsn.Data.User.Result.CoreUserInfo.CreatedAt != "" {
+		jsn.Data.User.Result.Legacy.CreatedAt = jsn.Data.User.Result.CoreUserInfo.CreatedAt
+	}
 
 	if jsn.Data.User.Result.Legacy.ScreenName == "" {
 		return Profile{}, fmt.Errorf("either @%s does not exist or is private", username)
@@ -125,62 +146,41 @@ func (s *Scraper) GetProfile(username string) (Profile, error) {
 }
 
 func (s *Scraper) GetProfileByID(userID string) (Profile, error) {
-	var jsn user
-	req, err := http.NewRequest("GET", "https://api.x.com/graphql/tD8zKvQzwY3kdx5yz6YmOw/UserByRestId", nil)
+	username, err := s.resolveScreenNameByUserID(userID)
 	if err != nil {
 		return Profile{}, err
 	}
 
-	variables := map[string]interface{}{
-		"userId":                   userID,
-		"withSafetyModeUserFields": true,
-	}
-
-	features := map[string]interface{}{
-		"hidden_profile_subscriptions_enabled":                              true,
-		"rweb_tipjar_consumption_enabled":                                   true,
-		"responsive_web_graphql_exclude_directive_enabled":                  true,
-		"verified_phone_label_enabled":                                      false,
-		"highlights_tweets_tab_ui_enabled":                                  true,
-		"responsive_web_twitter_article_notes_tab_enabled":                  true,
-		"subscriptions_feature_can_gift_premium":                            true,
-		"creator_subscriptions_tweet_preview_api_enabled":                   true,
-		"responsive_web_graphql_skip_user_profile_image_extensions_enabled": false,
-		"responsive_web_graphql_timeline_navigation_enabled":                true,
-	}
-
-	query := url.Values{}
-	query.Set("variables", mapToJSONString(variables))
-	query.Set("features", mapToJSONString(features))
-	req.URL.RawQuery = query.Encode()
-
-	err = s.RequestAPI(req, &jsn)
+	profile, err := s.GetProfile(username)
 	if err != nil {
 		return Profile{}, err
 	}
 
-	if len(jsn.Errors) > 0 && jsn.Data.User.Result.RestID == "" {
-		if strings.Contains(jsn.Errors[0].Message, "Missing LdapGroup(visibility-custom-suspension)") {
-			return Profile{}, fmt.Errorf("user is suspended")
-		}
-		return Profile{}, fmt.Errorf("%s", jsn.Errors[0].Message)
-	}
-
-	if jsn.Data.User.Result.RestID == "" {
-		if jsn.Data.User.Result.Message == "User is suspended" {
-			return Profile{}, fmt.Errorf("user is suspended")
-		}
-		return Profile{}, fmt.Errorf("user not found")
-	}
-	jsn.Data.User.Result.Legacy.IDStr = jsn.Data.User.Result.RestID
-
-	if jsn.Data.User.Result.Legacy.ScreenName == "" {
-		return Profile{}, fmt.Errorf("either @%s does not exist or is private", userID)
-	}
-
-	profile := parseProfile(jsn.Data.User.Result.Legacy)
-	profile.IsBlueVerified = jsn.Data.User.Result.IsBlueVerified
+	// Keep the caller-supplied ID authoritative even if X resolves via username.
+	profile.UserID = userID
 	return profile, nil
+}
+
+func (s *Scraper) resolveScreenNameByUserID(userID string) (string, error) {
+	// Current x.com profile pages resolve the username client-side after /i/user/<id>.
+	// Resolve by reading the username from the user's timeline APIs first.
+	if tweets, _, err := s.FetchTweetsByUserID(userID, 1, ""); err == nil {
+		for _, tweet := range tweets {
+			if tweet != nil && tweet.Username != "" {
+				return tweet.Username, nil
+			}
+		}
+	}
+
+	if tweets, _, err := s.FetchTweetsAndRepliesByUserID(userID, 1, ""); err == nil {
+		for _, tweet := range tweets {
+			if tweet != nil && tweet.Username != "" {
+				return tweet.Username, nil
+			}
+		}
+	}
+
+	return "", fmt.Errorf("could not resolve user id %s", userID)
 }
 
 // GetUserIDByScreenName from API

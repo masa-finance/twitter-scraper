@@ -41,53 +41,27 @@ func (s *Scraper) FetchTweetsAndRepliesByUserID(userID string, maxReplysNbr int,
 		maxReplysNbr = 200
 	}
 
-	req, err := s.newRequest("GET", "https://api.x.com/graphql/vMkJyzx1wdmvOeeNG0n6Wg/UserTweetsAndReplies")
+	// Live x.com UserTweetsAndReplies (Mar 2026).
+	req, err := s.newRequest("GET", "https://x.com/i/api/graphql/zedqO5hg41Ox6UeAKsWWzA/UserTweetsAndReplies")
 	if err != nil {
 		return nil, "", err
 	}
 
 	variables := map[string]interface{}{
-		"userId":                                 userID,
-		"count":                                  maxReplysNbr,
-		"includePromotedContent":                 false,
-		"withQuickPromoteEligibilityTweetFields": false,
-		"withVoice":                              true,
-		"withV2Timeline":                         true,
+		"userId":                 userID,
+		"count":                  maxReplysNbr,
+		"includePromotedContent": true,
+		"withCommunity":          true,
+		"withVoice":              true,
 	}
-
-	features := map[string]interface{}{
-		"rweb_tipjar_consumption_enabled":                                         true,
-		"responsive_web_graphql_exclude_directive_enabled":                        true,
-		"verified_phone_label_enabled":                                            false,
-		"creator_subscriptions_tweet_preview_api_enabled":                         true,
-		"responsive_web_graphql_timeline_navigation_enabled":                      true,
-		"responsive_web_graphql_skip_user_profile_image_extensions_enabled":       false,
-		"communities_web_enable_tweet_community_results_fetch":                    true,
-		"c9s_tweet_anatomy_moderator_badge_enabled":                               true,
-		"articles_preview_enabled":                                                true,
-		"responsive_web_edit_tweet_api_enabled":                                   true,
-		"graphql_is_translatable_rweb_tweet_is_translatable_enabled":              true,
-		"view_counts_everywhere_api_enabled":                                      true,
-		"longform_notetweets_consumption_enabled":                                 true,
-		"responsive_web_twitter_article_tweet_consumption_enabled":                true,
-		"tweet_awards_web_tipping_enabled":                                        false,
-		"creator_subscriptions_quote_tweet_preview_enabled":                       false,
-		"freedom_of_speech_not_reach_fetch_enabled":                               true,
-		"standardized_nudges_misinfo":                                             true,
-		"tweet_with_visibility_results_prefer_gql_limited_actions_policy_enabled": true,
-		"rweb_video_timestamps_enabled":                                           true,
-		"longform_notetweets_rich_text_read_enabled":                              true,
-		"longform_notetweets_inline_media_enabled":                                true,
-		"responsive_web_enhance_cards_enabled":                                    false,
-	}
-
 	if cursor != "" {
 		variables["cursor"] = cursor
 	}
 
 	query := url.Values{}
 	query.Set("variables", mapToJSONString(variables))
-	query.Set("features", mapToJSONString(features))
+	query.Set("features", mapToJSONString(graphqlWebClientFeatures()))
+	query.Set("fieldToggles", mapToJSONString(map[string]interface{}{"withArticlePlainText": false}))
 	req.URL.RawQuery = query.Encode()
 
 	var timeline timelineV2
@@ -106,7 +80,8 @@ func (s *Scraper) FetchTweetsByUserID(userID string, maxTweetsNbr int, cursor st
 		maxTweetsNbr = 200
 	}
 
-	req, err := s.newRequest("GET", "https://api.x.com/graphql/QWF3SzpHmykQHsQMixG0cg/UserTweets")
+	// Hash + payload from live x.com UserTweets (Mar 2026).
+	req, err := s.newRequest("GET", "https://x.com/i/api/graphql/O0epvwaQPUx-bT9YlqlL6w/UserTweets")
 	if err != nil {
 		return nil, "", err
 	}
@@ -114,42 +89,18 @@ func (s *Scraper) FetchTweetsByUserID(userID string, maxTweetsNbr int, cursor st
 	variables := map[string]interface{}{
 		"userId":                                 userID,
 		"count":                                  maxTweetsNbr,
-		"includePromotedContent":                 false,
-		"withQuickPromoteEligibilityTweetFields": false,
+		"includePromotedContent":                 true,
+		"withQuickPromoteEligibilityTweetFields": true,
 		"withVoice":                              true,
-		"withV2Timeline":                         true,
 	}
-	features := map[string]interface{}{
-		"rweb_lists_timeline_redesign_enabled":                              true,
-		"responsive_web_graphql_exclude_directive_enabled":                  true,
-		"verified_phone_label_enabled":                                      false,
-		"creator_subscriptions_tweet_preview_api_enabled":                   true,
-		"responsive_web_graphql_timeline_navigation_enabled":                true,
-		"responsive_web_graphql_skip_user_profile_image_extensions_enabled": false,
-		"tweetypie_unmention_optimization_enabled":                          true,
-		"vibe_api_enabled":                                                        true,
-		"responsive_web_edit_tweet_api_enabled":                                   true,
-		"graphql_is_translatable_rweb_tweet_is_translatable_enabled":              true,
-		"view_counts_everywhere_api_enabled":                                      true,
-		"longform_notetweets_consumption_enabled":                                 true,
-		"tweet_awards_web_tipping_enabled":                                        false,
-		"freedom_of_speech_not_reach_fetch_enabled":                               true,
-		"standardized_nudges_misinfo":                                             true,
-		"tweet_with_visibility_results_prefer_gql_limited_actions_policy_enabled": false,
-		"interactive_text_enabled":                                                true,
-		"responsive_web_text_conversations_enabled":                               false,
-		"longform_notetweets_rich_text_read_enabled":                              true,
-		"longform_notetweets_inline_media_enabled":                                false,
-		"responsive_web_enhance_cards_enabled":                                    false,
-	}
-
 	if cursor != "" {
 		variables["cursor"] = cursor
 	}
 
 	query := url.Values{}
 	query.Set("variables", mapToJSONString(variables))
-	query.Set("features", mapToJSONString(features))
+	query.Set("features", mapToJSONString(graphqlWebClientFeatures()))
+	query.Set("fieldToggles", mapToJSONString(map[string]interface{}{"withArticlePlainText": false}))
 	req.URL.RawQuery = query.Encode()
 
 	var timeline timelineV2
@@ -165,54 +116,36 @@ func (s *Scraper) FetchTweetsByUserID(userID string, maxTweetsNbr int, cursor st
 // GetTweet get a single tweet by ID.
 func (s *Scraper) GetTweet(id string) (*Tweet, error) {
 	if s.isLogged {
-		// Use TweetDetail endpoint for authenticated requests
-		req, err := s.newRequest("GET", "https://api.x.com/graphql/U0HTv-bAWTBYylwEMT7x5A/TweetDetail")
+		req, err := s.newRequest("GET", "https://x.com/i/api/graphql/xIYgDwjboktoFeXe_fgacw/TweetDetail")
 		if err != nil {
 			return nil, err
 		}
 
 		variables := map[string]interface{}{
 			"focalTweetId":                           id,
+			"referrer":                               "tweet",
 			"with_rux_injections":                    false,
-			"includePromotedContent":                 false,
+			"rankingMode":                            "Relevance",
+			"includePromotedContent":                 true,
 			"withCommunity":                          true,
-			"withQuickPromoteEligibilityTweetFields": false,
+			"withQuickPromoteEligibilityTweetFields": true,
 			"withBirdwatchNotes":                     true,
 			"withVoice":                              true,
-			"withV2Timeline":                         true,
 		}
 
-		features := map[string]interface{}{
-			"rweb_tipjar_consumption_enabled":                                         true,
-			"responsive_web_graphql_exclude_directive_enabled":                        true,
-			"verified_phone_label_enabled":                                            false,
-			"creator_subscriptions_tweet_preview_api_enabled":                         true,
-			"responsive_web_graphql_timeline_navigation_enabled":                      true,
-			"responsive_web_graphql_skip_user_profile_image_extensions_enabled":       false,
-			"communities_web_enable_tweet_community_results_fetch":                    true,
-			"c9s_tweet_anatomy_moderator_badge_enabled":                               true,
-			"articles_preview_enabled":                                                true,
-			"tweetypie_unmention_optimization_enabled":                                true,
-			"responsive_web_edit_tweet_api_enabled":                                   true,
-			"graphql_is_translatable_rweb_tweet_is_translatable_enabled":              true,
-			"view_counts_everywhere_api_enabled":                                      true,
-			"longform_notetweets_consumption_enabled":                                 true,
-			"responsive_web_twitter_article_tweet_consumption_enabled":                true,
-			"tweet_awards_web_tipping_enabled":                                        false,
-			"creator_subscriptions_quote_tweet_preview_enabled":                       false,
-			"freedom_of_speech_not_reach_fetch_enabled":                               true,
-			"standardized_nudges_misinfo":                                             true,
-			"tweet_with_visibility_results_prefer_gql_limited_actions_policy_enabled": true,
-			"rweb_video_timestamps_enabled":                                           true,
-			"longform_notetweets_rich_text_read_enabled":                              true,
-			"longform_notetweets_inline_media_enabled":                                true,
-			"rweb_lists_timeline_redesign_enabled":                                    true,
-			"responsive_web_enhance_cards_enabled":                                    false,
+		fieldToggles := map[string]interface{}{
+			"withArticleRichContentState": true,
+			"withArticlePlainText":        false,
+			"withArticleSummaryText":      true,
+			"withArticleVoiceOver":        true,
+			"withGrokAnalyze":             false,
+			"withDisallowedReplyControls": false,
 		}
 
 		query := url.Values{}
 		query.Set("variables", mapToJSONString(variables))
-		query.Set("features", mapToJSONString(features))
+		query.Set("features", mapToJSONString(graphqlWebClientFeatures()))
+		query.Set("fieldToggles", mapToJSONString(fieldToggles))
 		req.URL.RawQuery = query.Encode()
 
 		var conversation threadedConversation
@@ -229,7 +162,7 @@ func (s *Scraper) GetTweet(id string) (*Tweet, error) {
 		}
 	} else {
 		// Use TweetResultByRestId for guest/unauthenticated requests
-		req, err := s.newRequest("GET", "https://api.x.com/graphql/Xl5pC_lBk_gcO2ItU39DQw/TweetResultByRestId")
+		req, err := s.newRequest("GET", "https://api.x.com/graphql/zy39CwTyYhU-_0LP7dljjg/TweetResultByRestId")
 		if err != nil {
 			return nil, err
 		}
@@ -241,40 +174,54 @@ func (s *Scraper) GetTweet(id string) (*Tweet, error) {
 			"withVoice":              false,
 		}
 
-		features := map[string]interface{}{
-			"rweb_tipjar_consumption_enabled":                                         true,
-			"responsive_web_graphql_exclude_directive_enabled":                        true,
-			"verified_phone_label_enabled":                                            false,
+		query := url.Values{}
+		query.Set("variables", mapToJSONString(variables))
+		query.Set("features", mapToJSONString(map[string]interface{}{
 			"creator_subscriptions_tweet_preview_api_enabled":                         true,
-			"responsive_web_graphql_timeline_navigation_enabled":                      true,
-			"responsive_web_graphql_skip_user_profile_image_extensions_enabled":       false,
+			"premium_content_api_read_enabled":                                        false,
 			"communities_web_enable_tweet_community_results_fetch":                    true,
 			"c9s_tweet_anatomy_moderator_badge_enabled":                               true,
+			"responsive_web_grok_analyze_button_fetch_trends_enabled":                 false,
+			"responsive_web_grok_analyze_post_followups_enabled":                      false,
+			"responsive_web_jetfuel_frame":                                            true,
+			"responsive_web_grok_share_attachment_enabled":                            true,
+			"responsive_web_grok_annotations_enabled":                                 true,
 			"articles_preview_enabled":                                                true,
-			"tweetypie_unmention_optimization_enabled":                                true,
 			"responsive_web_edit_tweet_api_enabled":                                   true,
 			"graphql_is_translatable_rweb_tweet_is_translatable_enabled":              true,
 			"view_counts_everywhere_api_enabled":                                      true,
 			"longform_notetweets_consumption_enabled":                                 true,
 			"responsive_web_twitter_article_tweet_consumption_enabled":                true,
 			"tweet_awards_web_tipping_enabled":                                        false,
-			"creator_subscriptions_quote_tweet_preview_enabled":                       false,
+			"content_disclosure_indicator_enabled":                                    true,
+			"content_disclosure_ai_generated_indicator_enabled":                       true,
+			"responsive_web_grok_show_grok_translated_post":                           false,
+			"responsive_web_grok_analysis_button_from_backend":                        true,
+			"post_ctas_fetch_enabled":                                                 true,
 			"freedom_of_speech_not_reach_fetch_enabled":                               true,
 			"standardized_nudges_misinfo":                                             true,
 			"tweet_with_visibility_results_prefer_gql_limited_actions_policy_enabled": true,
-			"rweb_video_timestamps_enabled":                                           true,
 			"longform_notetweets_rich_text_read_enabled":                              true,
-			"longform_notetweets_inline_media_enabled":                                true,
-			"rweb_lists_timeline_redesign_enabled":                                    true,
+			"longform_notetweets_inline_media_enabled":                                false,
+			"profile_label_improvements_pcf_label_in_post_enabled":                    true,
+			"responsive_web_profile_redirect_enabled":                                 false,
+			"rweb_tipjar_consumption_enabled":                                         false,
+			"verified_phone_label_enabled":                                            false,
+			"responsive_web_grok_image_annotation_enabled":                            true,
+			"responsive_web_grok_imagine_annotation_enabled":                          true,
+			"responsive_web_grok_community_note_auto_translation_is_enabled":          false,
+			"responsive_web_graphql_skip_user_profile_image_extensions_enabled":       false,
+			"responsive_web_graphql_timeline_navigation_enabled":                      true,
 			"responsive_web_enhance_cards_enabled":                                    false,
-		}
-
-		fieldToggles := map[string]interface{}{"withArticleRichContentState": true}
-
-		query := url.Values{}
-		query.Set("variables", mapToJSONString(variables))
-		query.Set("features", mapToJSONString(features))
-		query.Set("fieldToggles", mapToJSONString(fieldToggles))
+		}))
+		query.Set("fieldToggles", mapToJSONString(map[string]interface{}{
+			"withArticleRichContentState": true,
+			"withArticlePlainText":        false,
+			"withArticleSummaryText":      true,
+			"withArticleVoiceOver":        true,
+			"withGrokAnalyze":             false,
+			"withDisallowedReplyControls": false,
+		}))
 		req.URL.RawQuery = query.Encode()
 
 		var result tweetResult
@@ -288,4 +235,3 @@ func (s *Scraper) GetTweet(id string) (*Tweet, error) {
 	}
 	return nil, fmt.Errorf("tweet with ID %s not found", id)
 }
-
